@@ -1,18 +1,45 @@
 import { DiscordFactory, IntentsUtil } from 'discordoo'
 import satori from 'satori'
 import { Image } from './image'
-import { Transformer } from '@napi-rs/image'
 import fs from 'fs'
 import { promisify } from 'util'
 import dotenv from 'dotenv'
 import * as os from 'os'
 import { Resvg, ResvgRenderOptions } from '@resvg/resvg-js'
+import { MaxResPreset, UltraResPreset, LowResPreset, MediumResPreset, HighResPreset } from './preset.config'
+
 dotenv.config()
 
 const readFileAsync = promisify(fs.readFile)
 
 const TOKEN = process.env.TOKEN as string
-const RUNTIME = typeof Bun !== 'undefined' ? 'Bun' : 'Node'
+const RUNTIME = typeof Bun !== 'undefined' ? 'bun' : 'node'
+let RESOLUTION_PRESET = new MaxResPreset()
+
+const setResolutionPreset = (preset: string) => {
+    switch (preset) {
+        case 'low':
+            RESOLUTION_PRESET = new LowResPreset()
+            break
+        case 'medium':
+            RESOLUTION_PRESET = new MediumResPreset()
+            break
+        case 'high':
+            RESOLUTION_PRESET = new HighResPreset()
+            break
+        case 'ultra':
+            RESOLUTION_PRESET = new UltraResPreset()
+            break
+        case 'max':
+        default:
+            RESOLUTION_PRESET = new MaxResPreset()
+            break
+    }
+}
+
+const resetResolutionPreset = () => {
+    RESOLUTION_PRESET = new MaxResPreset()
+}
 
 const app = DiscordFactory.create(TOKEN, {
     gateway: {
@@ -23,14 +50,23 @@ const app = DiscordFactory.create(TOKEN, {
 app.on('messageCreate', async context => {
     const { message } = context
 
-    if (message.content.startsWith('mia!ping')) {
+    if (message.content.startsWith('mia!ping') || message.content.startsWith(`mia-${RUNTIME}!ping`)) {
         return message.reply(`Pong ${os.hostname()}@${RUNTIME}! ${app.gateway.ping}ms`)
     }
 
-    if (message.content.startsWith('mia!profile')) {
-        const args = message.content.split(/ +/g)
+    if (message.content.startsWith('mia!memory') || message.content.startsWith(`mia-${RUNTIME}!memory`)) {
+        return message.reply(`Heap usage: ${process.memoryUsage().heapUsed / 1024 / 1024} MB`)
+    }
 
-        let requestedUser = args[1] ?? message.authorId
+    if (message.content.startsWith('mia!profile') || message.content.startsWith(`mia-${RUNTIME}!profile`)) {
+        const contentWithoutFlags = message.content.replace(/(-p=\w+)/g, (match) => {
+            setResolutionPreset(match.split('=')[1])
+            return ''
+        })
+
+        const args = contentWithoutFlags.split(/ +/g)
+
+        let requestedUser = args[1].trim() || message.authorId
         if (requestedUser.includes('<')) requestedUser = requestedUser.replace(/[<>@]/g, '')
 
         let user = await app.users.cache.get(requestedUser)
@@ -39,20 +75,27 @@ app.on('messageCreate', async context => {
 
         const before = Date.now()
         const component = Image(
-            user.avatarUrl({ size: 2048 }) ?? user.defaultAvatarUrl(),
-            user.username
+            user.avatarUrl({ size: 512 }) ?? user.defaultAvatarUrl(),
+            user.globalName ?? user.username,
+            RESOLUTION_PRESET.font,
         )
         const afterReact = Date.now()
 
         const onestFont = await readFileAsync('Onest-Regular.ttf')
+        const sawaFont = await readFileAsync('SawarabiGothic-Regular.ttf')
 
         const svg = await satori(component, {
-            width: 3840,
-            height: 2160,
+            ...RESOLUTION_PRESET.satori,
             fonts: [
                 {
                     name: 'Onest',
                     data: onestFont,
+                    weight: 400,
+                    style: 'normal'
+                },
+                {
+                    name: 'SawarabiGothic-Regular.ttf',
+                    data: sawaFont,
                     weight: 400,
                     style: 'normal'
                 },
@@ -63,10 +106,10 @@ app.on('messageCreate', async context => {
             background: 'rgba(238, 235, 230, .9)',
             fitTo: {
                 mode: 'width',
-                value: 3840,
+                ...RESOLUTION_PRESET.svg2png
             },
             font: {
-                fontFiles: ['Onest-Regular.ttf'],
+                fontFiles: ['Onest-Regular.ttf', 'SawarabiGothic-Regular.ttf'],
                 loadSystemFonts: false,
             },
         }
@@ -76,8 +119,10 @@ app.on('messageCreate', async context => {
         const pngBuffer = pngData.asPng()
 
         const after = Date.now()
-        return message.reply(
-            `Твой профиль ${os.hostname()}@${RUNTIME}! (render: ${after-before}ms) (react: ${afterReact-before}ms)`,
+
+        await message.reply(
+            `Картинка профиля от ${os.hostname()}@${RUNTIME}! `
+            + `(preset: ${RESOLUTION_PRESET.name}) (render: ${after-before}ms) (react: ${afterReact-before}ms)`,
             {
                 files: [
                     {
@@ -86,6 +131,9 @@ app.on('messageCreate', async context => {
                     }
                 ]
             })
+
+        resetResolutionPreset()
+        return
     }
 })
 
