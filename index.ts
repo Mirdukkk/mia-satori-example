@@ -23,19 +23,24 @@ const app = DiscordFactory.create(TOKEN, {
 app.on('messageCreate', async context => {
     const { message } = context
 
-    if (message.content === 'mia!ping') {
+    if (message.content.startsWith('mia!ping')) {
         return message.reply(`Pong ${os.hostname()}@${RUNTIME}! ${app.gateway.ping}ms`)
     }
 
-    if (message.content === 'mia!profile') {
-        const author = await message.author()
+    if (message.content.startsWith('mia!profile')) {
+        const args = message.content.split(/ +/g)
 
-        if (!author) return
+        let requestedUser = args[1] ?? message.authorId
+        if (requestedUser.includes('<')) requestedUser = requestedUser.replace(/[<>@]/g, '')
+
+        let user = await app.users.cache.get(requestedUser)
+        if (!user) user = await app.users.fetch(requestedUser)
+        if (!user) return message.reply('Юзер не найден!')
 
         const before = Date.now()
         const component = Image(
-            author.avatarUrl({ size: 2048 }) ?? author.defaultAvatarUrl(),
-            author.username
+            user.avatarUrl({ size: 2048 }) ?? user.defaultAvatarUrl(),
+            user.username
         )
         const afterReact = Date.now()
 
