@@ -12,6 +12,7 @@ dotenv.config()
 const readFileAsync = promisify(fs.readFile)
 
 const TOKEN = process.env.TOKEN as string
+const RUNTIME = typeof Bun !== 'undefined' ? 'Bun' : 'Node'
 
 const app = DiscordFactory.create(TOKEN, {
     gateway: {
@@ -23,7 +24,7 @@ app.on('messageCreate', async context => {
     const { message } = context
 
     if (message.content === 'mia!ping') {
-        return message.reply(`Pong@${os.hostname()}! ${app.gateway.ping}ms`)
+        return message.reply(`Pong ${os.hostname()}@${RUNTIME}! ${app.gateway.ping}ms`)
     }
 
     if (message.content === 'mia!profile') {
@@ -70,14 +71,16 @@ app.on('messageCreate', async context => {
         const pngBuffer = pngData.asPng()
 
         const after = Date.now()
-        return message.reply(`Твой профиль@${os.hostname()}! (render: ${after-before}ms) (react: ${afterReact-before}ms)`,{
-            files: [
-                {
-                    name: 'profile.png',
-                    file: pngBuffer
-                }
-            ]
-        })
+        return message.reply(
+            `Твой профиль ${os.hostname()}@${RUNTIME}! (render: ${after-before}ms) (react: ${afterReact-before}ms)`,
+            {
+                files: [
+                    {
+                        name: 'profile.png',
+                        file: pngBuffer
+                    }
+                ]
+            })
     }
 })
 
