@@ -27,10 +27,12 @@ app.on('messageCreate', async context => {
 
         if (!author) return
 
+        const before = Date.now()
         const component = Image(
-            author.avatarUrl({ size: 128 }) ?? author.defaultAvatarUrl(),
+            author.avatarUrl({ size: 256 }) ?? author.defaultAvatarUrl(),
             author.username
         )
+        const afterReact = Date.now()
 
         const onestFont = await readFileAsync('Onest-Regular.ttf')
 
@@ -50,7 +52,8 @@ app.on('messageCreate', async context => {
         const transformer = Transformer.fromSvg(svg)
         const image = await transformer.png()
 
-        return message.reply('Твой профиль:',{
+        const after = Date.now()
+        return message.reply(`Твой профиль! (render: ${after-before}ms) (react: ${afterReact-before}ms)`,{
             files: [
                 {
                 name: 'profile.png',

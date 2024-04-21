@@ -15,6 +15,6 @@ export function Image(avatar: string, username: string) {
         }}
     >
         <img src={avatar} alt="avatar" style={{ margin: '0 75px', width: 550, height: 550, borderRadius: '50%' }} />
-        <div style={{ marginTop: 40 }}>{ username }</div>
+        <div style={{ marginTop: 128 }}>{ username }</div>
     </div>
 }
