@@ -66,7 +66,7 @@ app.on('messageCreate', async context => {
 
         const args = contentWithoutFlags.split(/ +/g)
 
-        let requestedUser = args[1].trim() || message.authorId
+        let requestedUser = args[1]?.trim() || message.authorId
         if (requestedUser.includes('<')) requestedUser = requestedUser.replace(/[<>@]/g, '')
 
         let user = await app.users.cache.get(requestedUser)
