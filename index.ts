@@ -6,6 +6,7 @@ import fs from 'fs'
 import { promisify } from 'util'
 import dotenv from 'dotenv'
 import * as os from 'os'
+import { Resvg, ResvgRenderOptions } from '@resvg/resvg-js'
 dotenv.config()
 
 const readFileAsync = promisify(fs.readFile)
@@ -40,8 +41,8 @@ app.on('messageCreate', async context => {
         const onestFont = await readFileAsync('Onest-Regular.ttf')
 
         const svg = await satori(component, {
-            width: 3200,
-            height: 1600,
+            width: 1200,
+            height: 800,
             fonts: [
                 {
                     name: 'Onest',
@@ -52,15 +53,28 @@ app.on('messageCreate', async context => {
             ],
         })
 
-        const transformer = Transformer.fromSvg(svg)
-        const image = await transformer.png()
+        const opts: ResvgRenderOptions = {
+            background: 'rgba(238, 235, 230, .9)',
+            fitTo: {
+                mode: 'width',
+                value: 1200,
+            },
+            font: {
+                fontFiles: ['Onest-Regular.ttf'],
+                loadSystemFonts: false,
+            },
+        }
+
+        const resvg = new Resvg(svg, opts)
+        const pngData = resvg.render()
+        const pngBuffer = pngData.asPng()
 
         const after = Date.now()
         return message.reply(`Твой профиль@${os.hostname()}! (render: ${after-before}ms) (react: ${afterReact-before}ms)`,{
             files: [
                 {
-                name: 'profile.png',
-                file: image
+                    name: 'profile.png',
+                    file: pngBuffer
                 }
             ]
         })

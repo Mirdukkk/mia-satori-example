@@ -10,11 +10,11 @@ export function Image(avatar: string, username: string) {
             alignItems: 'center',
             justifyContent: 'center',
             backgroundColor: '#fff',
-            fontSize: 160,
+            fontSize: 64,
             fontWeight: 400,
         }}
     >
-        <img src={avatar} alt="avatar" style={{ margin: '0 75px', width: 550, height: 550, borderRadius: '50%' }} />
-        <div style={{ marginTop: 128 }}>{ username }</div>
+        <img src={avatar} alt="avatar" style={{ margin: '0 75px', width: 256, height: 256, borderRadius: '50%' }} />
+        <div style={{ marginTop: 64 }}>{ username }</div>
     </div>
 }
