@@ -19,7 +19,7 @@ app.on('messageCreate', async context => {
     const { message } = context
 
     if (message.content === 'mia!ping') {
-        return message.reply('Pong!')
+        return message.reply(`Pong! ${app.gateway.ping}ms`)
     }
 
     if (message.content === 'mia!profile') {
