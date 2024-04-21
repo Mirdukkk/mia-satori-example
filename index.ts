@@ -42,8 +42,8 @@ app.on('messageCreate', async context => {
         const onestFont = await readFileAsync('Onest-Regular.ttf')
 
         const svg = await satori(component, {
-            width: 1200,
-            height: 800,
+            width: 3840,
+            height: 2160,
             fonts: [
                 {
                     name: 'Onest',
