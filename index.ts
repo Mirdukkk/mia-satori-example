@@ -34,7 +34,7 @@ app.on('messageCreate', async context => {
 
         const before = Date.now()
         const component = Image(
-            author.avatarUrl({ size: 256 }) ?? author.defaultAvatarUrl(),
+            author.avatarUrl({ size: 2048 }) ?? author.defaultAvatarUrl(),
             author.username
         )
         const afterReact = Date.now()
