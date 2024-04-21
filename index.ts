@@ -58,7 +58,7 @@ app.on('messageCreate', async context => {
             background: 'rgba(238, 235, 230, .9)',
             fitTo: {
                 mode: 'width',
-                value: 1200,
+                value: 3840,
             },
             font: {
                 fontFiles: ['Onest-Regular.ttf'],
